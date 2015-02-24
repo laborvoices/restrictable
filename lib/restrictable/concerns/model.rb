@@ -3,8 +3,12 @@ module Restrictable
   extend ActiveSupport::Concern
 
     module ClassMethods
-      def for_admin
-        all
+      def for_admin current_admin
+        if current_admin.is_super?
+          all
+        else
+          joins(:admins).where('admins.id = ?',current_admin.id)
+        end
       end
     end
 
