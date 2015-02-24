@@ -136,7 +136,7 @@ module Restrictable
       object = self.class.restricted_object
       object = instance_variable_get("@#{controller_name.singularize}") if object.nil?
       unless object.blank?
-        object.class.for_admin.include?(object)
+        object.class.for_admin(current_admin).include?(object)
       end
     end
 
