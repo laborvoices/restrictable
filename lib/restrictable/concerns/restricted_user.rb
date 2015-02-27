@@ -87,7 +87,7 @@ module Restrictable
         end
       end
 
-      def method_missing(method_call,*arguments)
+      def method_missing(method_call, *arguments, &block)
         hash = method_hash(method_call)
         if hash.nil?
           super
@@ -174,7 +174,7 @@ module Restrictable
       end
     end
 
-    def method_missing(method_call,*arguments)
+    def method_missing(method_call, *arguments, &block)
       hash = method_hash(method_call)
       if hash.nil?
         super
