@@ -1,7 +1,6 @@
 module Restrictable
   module Model
   extend ActiveSupport::Concern
-
     module ClassMethods
 
       def restricted_user_model
@@ -21,12 +20,17 @@ module Restrictable
       # Main Class Methods
       #
 
+      def restricted_through through_method
+        @through_method = through_method
+      end
+
       def for_admin current_admin 
         if current_admin.is_super?
           all
+        elsif @through_method.nil?
+          joins(restricted_user_table_name.to_sym).where("#{restricted_user_table_name}.id = ?",current_admin.id)
         else
-          # fix for not directly linked
-          joins(restricted_user_table_name.to_sym).where('admins.id = ?',current_admin.id)
+          send(@through_method,current_admin)
         end
       end
     end
@@ -36,12 +40,8 @@ module Restrictable
       has_many restricted_user_model["class"].underscore.pluralize.to_sym
     end
 
-
-
     def test
       "# move logic here"
     end
-
-
   end
 end
