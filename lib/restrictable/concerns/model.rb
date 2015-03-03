@@ -28,6 +28,8 @@ module Restrictable
         if current_admin.is_super?
           all
         elsif @through_method.nil?
+          none
+        elsif @through_method == :restricted_user
           joins(restricted_user_table_name.to_sym).where("#{restricted_user_table_name}.id = ?",current_admin.id)
         else
           send(@through_method,current_admin)
