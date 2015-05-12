@@ -1,6 +1,7 @@
 module Restrictable
   module RestrictedUser
   extend ActiveSupport::Concern
+    attr_accessor :facade
 
     #
     # class methods
@@ -37,12 +38,20 @@ module Restrictable
     # instance methoods
     #
 
+    def restrictable_role
+      if !facade.blank? && (role == 'super')
+        facade
+      else
+        @restrictable_role ||= role
+      end      
+    end
+
     def is_super?
-        @is_super ||= (role == 'super')
+      @is_super ||= (restrictable_role == 'super')
     end
 
     def is_admin?
-      @is_admin ||= (role == 'admin')
+      @is_admin ||= (restrictable_role == 'admin')
     end
 
   # private
@@ -144,7 +153,7 @@ module Restrictable
     #
 
     def role_check dynamic_role
-      role == dynamic_role
+      restrictable_role == dynamic_role
     end
 
     def role_check_role method_name

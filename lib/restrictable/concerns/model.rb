@@ -39,7 +39,9 @@ module Restrictable
 
 
     included do
-      has_many restricted_user_model["class"].underscore.pluralize.to_sym
+      unless restricted_user_model.blank?
+        has_many restricted_user_model["class"].underscore.pluralize.to_sym
+      end
     end
 
     def test

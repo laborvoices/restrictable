@@ -3,6 +3,7 @@ module Restrictable
   extend ActiveSupport::Concern
 
     included do
+      before_action :set_restrictable_role!
 
       def self.check_restrictable!
         if !@actions_set
@@ -157,5 +158,13 @@ module Restrictable
       "Admin does not exist!"
     end
 
+    #
+    # set restrictable role (super as client/admin/...)
+    #
+    def set_restrictable_role!
+      unless current_admin.nil?
+        current_admin.facade = params[:r]
+      end
+    end
   end
 end
