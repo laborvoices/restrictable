@@ -38,8 +38,13 @@ module Restrictable
     # instance methoods
     #
 
+
+    def hard_super?
+      @hard_super ||= (role == 'super')
+    end
+
     def restrictable_role
-      if !facade.blank? && (role == 'super')
+      if !facade.blank? && hard_super?
         facade
       else
         @restrictable_role ||= role
@@ -54,6 +59,12 @@ module Restrictable
       @is_admin ||= (restrictable_role == 'admin')
     end
 
+    def can? action
+      is_super? || unless (permissions.blank? || permissions[restrictable_role].blank?)
+        permissions[restrictable_role].include? action.to_s
+      end
+    end
+  
   # private
 
     module ClassMethods
@@ -147,10 +158,13 @@ module Restrictable
 
     end
 
-
     #
     # Dynamic Methods
     #
+
+    def permissions
+      @permissions ||= Restrictable.config["permissions"]
+    end
 
     def role_check dynamic_role
       restrictable_role == dynamic_role

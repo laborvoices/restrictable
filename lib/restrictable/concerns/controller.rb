@@ -1,8 +1,10 @@
 module Restrictable
   module Controller
   extend ActiveSupport::Concern
+    attr_accessor :allow_all
 
     included do
+      before_action :set_session_role!
       before_action :set_restrictable_role!
 
       def self.check_restrictable!
@@ -13,13 +15,13 @@ module Restrictable
         end
       end
 
-      def self.allow_client hash_or_sym=nil
-        set_permissions_hash("client", hash_or_sym)
-      end 
-
-      def self.allow_translator hash_or_sym=nil
-        set_permissions_hash("translator", hash_or_sym)
-      end 
+      def self.allow_restrictable role,hash_or_sym=nil
+        if role == :everyone
+          allow_all = true
+        else
+          set_permissions_hash(role.to_s, hash_or_sym)
+        end
+      end
 
       def self.allow_admin hash_or_sym=nil
         set_permissions_hash("admin", hash_or_sym)
@@ -78,12 +80,16 @@ module Restrictable
 
   private
 
+    def redirect_path
+      Restrictable.config["redirect_path"] || :root
+    end
+
     def check_permissions!
       if !defined?(current_admin)
-        redirect_to :root, notice: admin_does_not_exist_warning
+        redirect_to redirect_path, notice: admin_does_not_exist_warning
       else
         unless current_admin.is_super? || is_allowed?
-          redirect_to :root, notice: does_not_have_permission_warning
+          redirect_to redirect_path, notice: does_not_have_permission_warning
         end
       end
     end
@@ -91,32 +97,36 @@ module Restrictable
     def check_access!
       if should_validate_access?
         if !defined?(current_admin)
-          redirect_to :root, notice: admin_does_not_exist_warning
+          redirect_to redirect_path, notice: admin_does_not_exist_warning
         else
           unless is_valid_admin?
-            redirect_to :root, notice: does_not_have_access_warning
+            redirect_to redirect_path, notice: does_not_have_access_warning
           end
         end
       end
     end
 
     def is_allowed?
-      unless current_admin.blank?
-        permissions_hash = self.class.permissions_hash
-        role = current_admin.role
-        unless permissions_hash[role].blank?
-          if permissions_hash[role] == :all
-            has_permission = true
-          elsif permissions_hash[role] == :none
-            has_permission = false
-          elsif !permissions_hash[role][:only].blank?
-            has_permission = permissions_hash[role][:only].include?(action_name.to_sym)
-          elsif !permissions_hash[role][:except].blank?
-            has_permission = !permissions_hash[role][:except].include?(action_name.to_sym)
+      if allow_all == true
+        true
+      else
+        unless current_admin.blank?
+          permissions_hash = self.class.permissions_hash
+          role = current_admin.restrictable_role
+          unless permissions_hash[role].blank?
+            if permissions_hash[role] == :all
+              has_permission = true
+            elsif permissions_hash[role] == :none
+              has_permission = false
+            elsif !permissions_hash[role][:only].blank?
+              has_permission = permissions_hash[role][:only].include?(action_name.to_sym)
+            elsif !permissions_hash[role][:except].blank?
+              has_permission = !permissions_hash[role][:except].include?(action_name.to_sym)
+            end
           end
         end
+        has_permission 
       end
-      has_permission 
     end
 
     def should_validate_access?
@@ -161,9 +171,25 @@ module Restrictable
     #
     # set restrictable role (super as client/admin/...)
     #
+
+    def set_session_role!
+      unless params[:r].blank?
+        if params[:r]== 'clear'
+          session[:role] = nil
+        else
+          session[:role] = params[:r]
+        end
+      end
+    end
+
     def set_restrictable_role!
       unless current_admin.nil?
-        current_admin.facade = params[:r]
+        if current_admin.hard_super?
+          if !session[:role].blank?
+            @restrictable_role = session[:role]
+            current_admin.facade = session[:role]
+          end
+        end
       end
     end
   end
