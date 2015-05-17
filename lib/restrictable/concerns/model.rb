@@ -44,9 +44,5 @@ module Restrictable
         has_many restricted_user_model["class"].underscore.pluralize.to_sym
       end
     end
-
-    def test
-      "# move logic here"
-    end
   end
 end

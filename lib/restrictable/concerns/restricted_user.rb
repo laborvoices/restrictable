@@ -59,6 +59,14 @@ module Restrictable
       end      
     end
 
+    def restrictable_user
+      if !!facade_id
+        self.find_by(id: facade_id)
+      else
+        self
+      end
+    end 
+
     def is_super?
       @is_super ||= (restrictable_role == 'super')
     end
