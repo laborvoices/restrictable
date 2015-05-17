@@ -30,7 +30,8 @@ module Restrictable
         elsif @through_method.nil?
           none
         elsif @through_method == :restricted_user
-          joins(restricted_user_table_name.to_sym).where("#{restricted_user_table_name}.id = ?",current_admin.id)
+          joins(restricted_user_table_name.to_sym)
+              .where("#{restricted_user_table_name}.id = ?",current_admin.restrictable_role_id)
         else
           send(@through_method,current_admin)
         end

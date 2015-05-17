@@ -1,7 +1,7 @@
 module Restrictable
   module RestrictedUser
   extend ActiveSupport::Concern
-    attr_accessor :facade
+    attr_accessor :facade, :facade_id
 
     #
     # class methods
@@ -48,6 +48,14 @@ module Restrictable
         facade
       else
         @restrictable_role ||= role
+      end      
+    end
+
+    def restrictable_role_id
+      if !facade_id.blank? && hard_super?
+        facade_id
+      else
+        @restrictable_role_id ||= id
       end      
     end
 

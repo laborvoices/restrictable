@@ -107,10 +107,10 @@ module Restrictable
     end
 
     def is_allowed?
-      if allow_all == true
-        true
-      else
-        unless current_admin.blank?
+      unless current_admin.blank?
+        if (allow_all == true) || current_admin.is_super?
+          true
+        else
           permissions_hash = self.class.permissions_hash
           role = current_admin.restrictable_role
           unless permissions_hash[role].blank?
@@ -124,8 +124,8 @@ module Restrictable
               has_permission = !permissions_hash[role][:except].include?(action_name.to_sym)
             end
           end
+          has_permission 
         end
-        has_permission 
       end
     end
 
@@ -176,8 +176,10 @@ module Restrictable
       unless params[:r].blank?
         if params[:r]== 'clear'
           session[:role] = nil
+          session[:role_id] = nil
         else
           session[:role] = params[:r]
+          session[:role_id] = params[:r_id]
         end
       end
     end
@@ -188,6 +190,7 @@ module Restrictable
           if !session[:role].blank?
             @restrictable_role = session[:role]
             current_admin.facade = session[:role]
+            current_admin.facade_id = session[:role_id]
           end
         end
       end
