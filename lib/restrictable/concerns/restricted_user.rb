@@ -61,7 +61,7 @@ module Restrictable
 
     def restrictable_user
       if !!facade_id
-        self.find_by(id: facade_id)
+        self.class.find_by(id: facade_id)
       else
         self
       end
