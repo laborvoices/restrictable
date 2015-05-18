@@ -38,9 +38,16 @@ module Restrictable
     # instance methoods
     #
 
-
     def hard_super?
       @hard_super ||= (role == 'super')
+    end
+
+    def face
+      if !facade_id.blank? && hard_super?
+        self.class.find_by(id: facade_id)
+      else
+        self
+      end 
     end
 
     def restrictable_role

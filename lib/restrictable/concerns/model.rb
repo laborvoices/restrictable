@@ -33,7 +33,7 @@ module Restrictable
           joins(restricted_user_table_name.to_sym)
               .where("#{restricted_user_table_name}.id = ?",current_admin.restrictable_role_id)
         else
-          send(@through_method,current_admin)
+          send(@through_method,current_admin.face)
         end
       end
     end
