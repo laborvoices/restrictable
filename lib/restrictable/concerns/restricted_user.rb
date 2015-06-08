@@ -29,7 +29,12 @@ module Restrictable
       validates_presence_of :role
       unless restrictable_models.blank?
         restrictable_models.each do |restrictable_model|
-          belongs_to restrictable_model["class"].underscore.to_sym, class_name: restrictable_model_to_class_name(restrictable_model)
+          belongs_to restrictable_model["class"].underscore.to_sym, class_name: namespaced_class_name(restrictable_model)
+        end
+      end
+      unless has_many_models.blank?
+        has_many_models.each do |has_many_model|
+          has_many index_key(has_many_model), class_name: namespaced_class_name(has_many_model), foreign_key: has_many_model["foreign_key"]
         end
       end
     end
@@ -145,7 +150,7 @@ module Restrictable
         if method_role_name
           { 
             method: 'objects',
-            param: method_role_name
+            param: method_role_name.singularize
           }
         else
           roles_for_dict = roles_for_hash(method_name)
@@ -170,9 +175,22 @@ module Restrictable
         @restrictable_models ||= Restrictable.config["restrictable_models"]
       end
 
-      def restrictable_model_to_class_name restrictable_model
-        module_part = "#{restrictable_model['engine']}::" unless restrictable_model['engine'].blank?
-        "#{module_part}#{restrictable_model["class"]}"
+      def has_many_models
+        @has_many_models ||= Restrictable.config["has_many_models"]
+      end
+
+      def namespaced_class_name model_config
+        module_part = "#{model_config['engine']}::" unless model_config['engine'].blank?
+        "#{module_part}#{model_config["class"]}"
+      end
+
+      def index_key model_config
+        if model_config["as"].blank?
+          key = model_config["class"]
+        else
+          key = model_config["as"]
+        end
+        key.underscore.pluralize.to_sym
       end
 
       def restrictable_model_find_by_class_name class_name
@@ -204,7 +222,7 @@ module Restrictable
 
     def objects dynamic_hash
       if is_super?
-        self.class.restrictable_model_to_class_name(dynamic_hash).constantize.all
+        self.class.namespaced_class_name(dynamic_hash).constantize.all
       else
         dynamic_role = dynamic_hash["class"].underscore
         top_obj = send(dynamic_role)
