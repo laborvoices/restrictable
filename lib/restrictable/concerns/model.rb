@@ -20,7 +20,7 @@ module Restrictable
       def all_from admin, through_class, object_class
         through_instance_name = through_class.name.demodulize.underscore
         through_id_name = "#{through_instance_name}_id".to_sym
-        
+
         #
         # Rails Bug || Oddity:  [Admin belongs_to :group]
         #
@@ -28,6 +28,7 @@ module Restrictable
         # Admin.new.respond_to? "group_id" => true
         # Admin.method_defined? "group_id" => true
         #
+
         if object_class.new.respond_to? through_id_name
           from = object_class
         else
