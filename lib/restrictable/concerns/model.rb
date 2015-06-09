@@ -39,8 +39,13 @@ module Restrictable
         end
 
         if from 
-          instance_ids = admin.send(through_instance_name).descendents(true).select(:id)
-          from.where("#{through_id_name} in (#{instance_ids.pluck(:id).join(',')}) ")
+          through_model = admin.send(through_instance_name)
+          if through_model.blank?
+            object_class.none
+          else
+            instance_ids = through_model.descendents(true).select(:id)
+            from.where("#{through_id_name} in (#{instance_ids.pluck(:id).join(',')}) ")
+          end
         else
           raise ArgumentError, 'Restrictable Configuration Error[all_from]'
         end
