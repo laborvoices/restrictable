@@ -87,6 +87,10 @@ module Restrictable
       @is_admin ||= (restrictable_role == 'admin')
     end
 
+    def is_root_admin?
+      is_super? || is_admin?
+    end
+
     def can? action
       is_super? || unless (permissions.blank? || permissions[restrictable_role].blank?)
         permissions[restrictable_role].include? action.to_s

@@ -61,7 +61,7 @@ module Restrictable
       end
 
       def for_admin admin 
-        if admin.is_super?
+        if admin.is_root_admin?
           all
         elsif @through_method.nil?
           none
