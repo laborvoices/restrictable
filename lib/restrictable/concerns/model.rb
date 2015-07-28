@@ -69,13 +69,12 @@ module Restrictable
           joins(restricted_user_table_name.to_sym)
             .where("#{restricted_user_table_name}.id = ?",admin.restrictable_role_id)
         elsif @object_class
-          all_from admin, @through_method, @object_class
+          all_from admin.face, @through_method, @object_class
         else
           send(@through_method,admin.face)
         end
       end
     end
-
 
     included do
       unless restricted_user_model.blank?
