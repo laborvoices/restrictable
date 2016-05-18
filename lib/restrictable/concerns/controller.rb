@@ -146,7 +146,7 @@ module Restrictable
     def is_valid_admin?
       object = self.class.restricted_object || instance_variable_get("@#{controller_name.singularize}")
       unless object.blank?
-        object.class.for_admin(current_admin).pluck(:id).include?(object.id)
+        !!object.class.for_admin(current_admin.face).where(id: object.id).count
       end
     end
 
